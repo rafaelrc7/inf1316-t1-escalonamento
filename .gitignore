@@ -1,0 +1,7 @@
+bin/
+obj/
+.cache/
+*.o
+*.dep
+compile_commands.json
+
