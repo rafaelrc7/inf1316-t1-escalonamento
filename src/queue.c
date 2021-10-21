@@ -2,16 +2,6 @@
 
 #include "queue.h"
 
-typedef struct _node Node;
-struct _node {
-	void *val;
-	Node *next;
-};
-
-struct _queue {
-	Node *start, *end;
-};
-
 Queue *create_queue()
 {
 	Queue *queue = (Queue *)malloc(sizeof(Queue));

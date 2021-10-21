@@ -1,6 +1,6 @@
 ##########TEMPLATE##########
 
-TARGET=interpretador_rt interpretador_rr escalonador_rt escalonador_rr prog_io prog_cpu
+TARGET=interpretador_rr escalonador_rr prog_cpu prog_io
 
 BINDIR=bin
 SRCDIR=src
@@ -10,8 +10,8 @@ DEPDIR=$(OBJDIR)/dep
 CC=gcc
 EXT=.c
 
-CCFLAGS=-O0 -g -Wall -Wextra -pedantic -ansi
-LDFLAGS=
+CCFLAGS=-O0 -g -Wall -Wextra -pedantic -DDEBUG
+LDFLAGS=-lrt -pthread
 
 ##########AUTO##########
 
@@ -31,7 +31,10 @@ RM_R = rm -r
 
 all: $(BIN)
 
-# $(BINDIR)/interpretador_rt: $(OBJDIR)/main.o
+$(BINDIR)/escalonador_rr: $(OBJDIR)/escalonador_rr.o $(OBJDIR)/queue.o
+$(BINDIR)/interpretador_rr: $(OBJDIR)/interpretador_rr.o
+$(BINDIR)/prog_cpu: $(OBJDIR)/prog_cpu.o
+$(BINDIR)/prog_io: $(OBJDIR)/prog_io.o
 
 $(BIN): | $(BINDIR)
 	$(CC) -o $@ $^ $(LDFLAGS)
