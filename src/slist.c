@@ -64,7 +64,6 @@ void *slist_remove(SList *slist)
 
 void *slist_peek(SList *slist)
 {
-	void *ptr;
 	if (slist_is_empty(slist))
 		return NULL;
 
@@ -73,29 +72,26 @@ void *slist_peek(SList *slist)
 
 void *slist_remove_index(SList *slist, unsigned long int index)
 {
-	unsigned int i = 0;
-	Node *curr, *prev;
+	Node *next, *node;
+	Node *tmp = slist->head;
 	void *ptr;
+	unsigned int i = 0;
 
-	if (index >= slist_size(slist))
+	if (slist_is_empty(slist) || index > slist_size(slist)-1)
 		return NULL;
 
-	curr = slist->head;
-	prev = curr;
+	if (index == 0)
+		return slist_remove(slist);
 
-	while(i < index) {
-		prev = curr;
-		curr = curr->next;
-	}
+	for (i = 0; tmp && i < index-1; ++i)
+		tmp = tmp->next;
+	node = tmp->next;
 
-	prev->next = curr->next;
-	ptr = curr->ptr;
+	ptr = node->ptr;
+	next = node->next;
+	free(node);
+	tmp->next = next;
 
-	if (slist->curr == curr)
-		slist->curr = NULL;
-
-	free(curr);
-	--slist->tam;
 	return ptr;
 }
 
