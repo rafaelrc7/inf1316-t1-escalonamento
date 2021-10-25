@@ -10,7 +10,7 @@ struct _node {
 
 struct _slist {
 	int (*fun_ordering)(void *, void *);
-	Node *start, *curr;
+	Node *head, *curr;
 	unsigned long int tam;
 };
 
@@ -28,11 +28,11 @@ void slist_insert(SList *slist, void *ptr)
 	if (!node)
 		return;
 
-	if (slist_is_empty(slist) || slist->fun_ordering(slist->start, node) > 0) {
-		node->next = slist->start;
-		slist->start = node;
+	if (slist_is_empty(slist) || slist->fun_ordering(slist->head, node) > 0) {
+		node->next = slist->head;
+		slist->head = node;
 	} else {
-		Node *curr = slist->start;
+		Node *curr = slist->head;
 		while (curr->next && slist->fun_ordering(curr->next, node) < 0)
 			curr = curr->next;
 		node->next = curr->next;
@@ -49,8 +49,8 @@ void *slist_remove(SList *slist)
 	if (slist_is_empty(slist))
 		return NULL;
 
-	node = slist->start;
-	slist->start = node->next;
+	node = slist->head;
+	slist->head = node->next;
 
 	ptr = node->ptr;
 	if (slist->curr == node)
@@ -68,7 +68,7 @@ void *slist_peek(SList *slist)
 	if (slist_is_empty(slist))
 		return NULL;
 
-	return slist->start->ptr;
+	return slist->head->ptr;
 }
 
 void *slist_remove_index(SList *slist, unsigned long int index)
@@ -80,7 +80,7 @@ void *slist_remove_index(SList *slist, unsigned long int index)
 	if (index >= slist_size(slist))
 		return NULL;
 
-	curr = slist->start;
+	curr = slist->head;
 	prev = curr;
 
 	while(i < index) {
@@ -109,9 +109,9 @@ unsigned int slist_is_empty(SList *slist)
 	return slist->tam == 0;
 }
 
-void slist_iterator_start(SList *slist)
+void slist_iterator_head(SList *slist)
 {
-	slist->curr = slist->start;
+	slist->curr = slist->head;
 }
 
 void *slist_iterator_next(SList *slist)
@@ -132,14 +132,14 @@ void *slist_iterator_remove(SList *slist)
 	if (!slist->curr)
 		return NULL;
 
-	curr = slist->start;
+	curr = slist->head;
 	prev = curr;
 	while(curr) {
 		if (curr == slist->curr) {
 			ptr = slist->curr->ptr;
 			slist->curr = slist->curr->next;
 			if (prev == curr) {
-				slist->start = curr->next;
+				slist->head = curr->next;
 			} else {
 				prev->next = curr->next;
 			}
