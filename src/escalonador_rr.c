@@ -11,23 +11,25 @@
 #include <unistd.h>
 
 #include "queue.h"
+#include "slist.h"
 
 #define IO_TIME 3000.0f
 
 float timevaldiff(struct timeval start, struct timeval end);
 void print_ready_queue(Queue *queue);
+int slist_ioproc_ordering(void *proc1, void *proc2);
 
 typedef struct _process {
 	char *name;
 	pid_t pid;
+	unsigned long int local_pid;
 } Process;
 
 typedef struct _io_process {
 	Process *proc;
 	float io_time;
 	struct timeval io_start;
-	struct _io_process *next, *prev;
-} IO_Process;
+} IOProcess;
 
 #define QUANTUM 1000.0f /* ms */
 
@@ -37,13 +39,21 @@ int main(void)
 	sem_t *sem_start_queue;
 	void *shm_start_queue_ptr;
 	Process *curr_proc = NULL;
-	IO_Process *io_proc_llist = NULL, *io_proc_it;
+	IOProcess *io_proc;
+	SList *io_proc_list;
+	unsigned long int local_pid = 0;
 	int shm_start_queue_fd, stat_loc;
 	struct timeval start, now;
 
 	ready_queue = create_queue();
 	if (!ready_queue) {
 		fprintf(stderr, "ERRO: Não foi possível criar fila de prontos.\nAbortando programa.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	io_proc_list = slist_create(&slist_ioproc_ordering);
+	if (!io_proc_list) {
+		fprintf(stderr, "ERRO: Não foi possível criar fila de IO.\nAbortando programa.\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -68,6 +78,7 @@ int main(void)
 				execlp(proc_name, proc_name, NULL);
 			kill(pid, SIGSTOP);
 			proc->pid = pid;
+			proc->local_pid = local_pid++;
 			enqueue(ready_queue, (void *)proc);
 #ifdef DEBUG
 			printf("[INFO] Criando novo processo \"%s\" de PID %d.\n", proc->name, proc->pid);
@@ -76,25 +87,13 @@ int main(void)
 		}
 
 		gettimeofday(&now, NULL);
-		io_proc_it = io_proc_llist;
-		while(io_proc_it) {
-			IO_Process *next = io_proc_it->next;
-			if (timevaldiff(io_proc_it->io_start, now) > io_proc_it->io_time) {
-				enqueue(ready_queue, io_proc_it->proc);
-				if (io_proc_it->prev)
-					io_proc_it->prev->next = io_proc_it->next;
-
-				if (io_proc_it->next)
-					io_proc_it->next->prev = io_proc_it->prev;
-
-				if (io_proc_llist == io_proc_it)
-					io_proc_llist = io_proc_it->next;
-
-				free(io_proc_it);
+		slist_iterator_head(io_proc_list);
+		while((io_proc = (IOProcess *)slist_iterator_next(io_proc_list))) {
+			if (timevaldiff(io_proc->io_start, now) > io_proc->io_time) {
+				slist_iterator_remove(io_proc_list);
+				enqueue(ready_queue, io_proc->proc);
 				print_ready_queue(ready_queue);
 			}
-
-			io_proc_it = next;
 		}
 
 		if (!curr_proc) {
@@ -120,16 +119,11 @@ int main(void)
 #ifdef DEBUG
 				printf("[INFO] Processo \"%s\" de PID %d entrou em I/O.\n", curr_proc->name, curr_proc->pid);
 #endif
-				IO_Process *io_proc = (IO_Process *)malloc(sizeof(IO_Process));
+				IOProcess *io_proc = (IOProcess *)malloc(sizeof(IOProcess));
 				io_proc->proc = curr_proc;
 				gettimeofday(&io_proc->io_start, NULL);
 				io_proc->io_time = IO_TIME;
-				io_proc->next = io_proc_llist;
-				if (io_proc->next)
-					io_proc->next->prev = io_proc;
-				io_proc->prev = NULL;
-
-				io_proc_llist = io_proc;
+				slist_insert(io_proc_list, io_proc);
 
 				curr_proc = NULL;
 			}
@@ -173,3 +167,15 @@ void print_ready_queue(Queue *queue)
 	printf("]\n");
 }
 
+int slist_ioproc_ordering(void *proc1, void *proc2)
+{
+	unsigned long int local_pid1 = ((IOProcess *)proc1)->proc->local_pid;
+	unsigned long int local_pid2 = ((IOProcess *)proc2)->proc->local_pid;
+
+	if (local_pid1 > local_pid2)
+		return 1;
+	else if (local_pid1 < local_pid2)
+		return -1;
+	else
+		return 0;
+}

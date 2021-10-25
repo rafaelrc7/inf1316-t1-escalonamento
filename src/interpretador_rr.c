@@ -28,6 +28,7 @@ int main(void)
 	shm_start_queue_ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_start_queue_fd, 0);
 	*(unsigned char *)shm_start_queue_ptr = 0;
 	sem_post(sem_start_queue);
+	sem_post(sem_start_queue);
 
 	while(!feof(exec_file_fd)) {
 		int ret;

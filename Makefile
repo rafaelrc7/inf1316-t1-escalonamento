@@ -31,7 +31,7 @@ RM_R = rm -r
 
 all: $(BIN)
 
-$(BINDIR)/escalonador_rr: $(OBJDIR)/escalonador_rr.o $(OBJDIR)/queue.o
+$(BINDIR)/escalonador_rr: $(OBJDIR)/escalonador_rr.o $(OBJDIR)/queue.o $(OBJDIR)/slist.o
 $(BINDIR)/interpretador_rr: $(OBJDIR)/interpretador_rr.o
 $(BINDIR)/prog_cpu: $(OBJDIR)/prog_cpu.o
 $(BINDIR)/prog_io: $(OBJDIR)/prog_io.o
