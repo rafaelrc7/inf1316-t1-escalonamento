@@ -11,7 +11,7 @@ struct _node {
 struct _slist {
 	int (*fun_ordering)(void *, void *);
 	Node *head, *curr;
-	unsigned long int tam;
+	unsigned long int tam, curr_index;
 };
 
 SList *slist_create(int (*fun_ordering)(void *, void *))
@@ -111,6 +111,7 @@ unsigned int slist_is_empty(SList *slist)
 void slist_iterator_head(SList *slist)
 {
 	slist->curr = slist->head;
+	slist->curr_index = 0;
 }
 
 void *slist_iterator_next(SList *slist)
@@ -121,35 +122,15 @@ void *slist_iterator_next(SList *slist)
 
 	ptr = slist->curr->ptr;
 	slist->curr = slist->curr->next;
+	++slist->curr_index;
 	return ptr;
 }
 
 void *slist_iterator_remove(SList *slist)
 {
-	void *ptr;
-	Node *node, *curr, *prev;
 	if (!slist->curr)
 		return NULL;
 
-	curr = slist->head;
-	prev = curr;
-	while(curr) {
-		if (curr == slist->curr) {
-			ptr = slist->curr->ptr;
-			slist->curr = slist->curr->next;
-			if (prev == curr) {
-				slist->head = curr->next;
-			} else {
-				prev->next = curr->next;
-			}
-			break;
-		}
-		prev = curr;
-		curr = curr->next;
-	}
-
-	free(curr);
-
-	return ptr;
+	return slist_remove_index(slist, slist->curr_index);
 }
 
