@@ -58,7 +58,6 @@ int main(void)
 	}
 
 	sem_start_queue = sem_open("/sem_escalonador_rr", O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
-	sem_wait(sem_start_queue);
 	shm_start_queue_fd = shm_open("/shm_escalonador_rr", O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 	shm_start_queue_ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_start_queue_fd, 0);
 
@@ -74,8 +73,11 @@ int main(void)
 			*(unsigned char*)shm_start_queue_ptr = 0;
 			sem_post(sem_start_queue);
 			pid = fork();
-			if (!pid)
+			if (!pid) {
 				execlp(proc_name, proc_name, NULL);
+				fprintf(stderr, "ERRO: não foi possível iniciar o processo \"%s\"\n", proc_name);
+				exit(EXIT_FAILURE);
+			}
 			kill(pid, SIGSTOP);
 			proc->pid = pid;
 			proc->local_pid = local_pid++;
