@@ -17,7 +17,7 @@ struct _slist {
 SList *slist_create(int (*fun_ordering)(void *, void *))
 {
 	SList *slist = (SList *)malloc(sizeof(SList));
-	*slist = (SList){fun_ordering, NULL, NULL, 0};
+	*slist = (SList){fun_ordering, NULL, NULL, 0, 0};
 
 	return slist;
 }
@@ -27,6 +27,8 @@ void slist_insert(SList *slist, void *ptr)
 	Node *node = (Node *)malloc(sizeof(Node));
 	if (!node)
 		return;
+
+	node->ptr = ptr;
 
 	if (slist_is_empty(slist) || slist->fun_ordering(slist->head, node) > 0) {
 		node->next = slist->head;
