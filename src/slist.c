@@ -128,9 +128,15 @@ void *slist_iterator_next(SList *slist)
 
 void *slist_iterator_remove(SList *slist)
 {
+	void *ptr;
+	Node *node;
 	if (!slist->curr)
 		return NULL;
 
-	return slist_remove_index(slist, slist->curr_index);
+	node = slist->curr->next;
+	ptr = slist_remove_index(slist, slist->curr_index);
+	slist->curr = node;
+
+	return ptr;
 }
 
