@@ -87,6 +87,9 @@ void *slist_remove_index(SList *slist, unsigned long int index)
 		tmp = tmp->next;
 	node = tmp->next;
 
+	if (slist->curr == node)
+		slist->curr = NULL;
+
 	ptr = node->ptr;
 	next = node->next;
 	free(node);
