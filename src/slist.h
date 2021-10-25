@@ -4,7 +4,7 @@
 typedef struct _slist SList;
 
 SList *slist_create(int (*fun_ordering)(void *, void *));
-void slist_insert(SList *slist, void *ptr, unsigned long int priority);
+void slist_insert(SList *slist, void *ptr);
 void *slist_remove(SList *slist);
 void *slist_peek(SList *slist);
 void *slist_remove_index(SList *slist, unsigned long int index);

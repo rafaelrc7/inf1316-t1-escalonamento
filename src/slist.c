@@ -22,32 +22,23 @@ SList *slist_create(int (*fun_ordering)(void *, void *))
 	return slist;
 }
 
-void slist_insert(SList *slist, void *ptr, unsigned long int priority)
+void slist_insert(SList *slist, void *ptr)
 {
 	Node *node = (Node *)malloc(sizeof(Node));
 	if (!node)
 		return;
 
-	node->ptr = ptr;
-	node->next = slist->start;
-	if (slist_is_empty(slist)) {
+	if (slist_is_empty(slist) || slist->fun_ordering(slist->start, node) > 0) {
+		node->next = slist->start;
 		slist->start = node;
 	} else {
 		Node *curr = slist->start;
-		if (slist->fun_ordering(ptr, curr) < 0) {
-			node->next = curr;
-			slist->start = node;
-		} else {
-			while (curr) {
-				if (slist->fun_ordering(ptr, curr) > 0 && (!curr->next || slist->fun_ordering(ptr, curr->next) < 0)) {
-					node->next = curr->next;
-					curr->next = node;
-					break;
-				}
-				curr = curr->next;
-			}
-		}
+		while (curr->next && slist->fun_ordering(curr->next, node) < 0)
+			curr = curr->next;
+		node->next = curr->next;
+		curr->next = node;
 	}
+
 	++slist->tam;
 }
 
