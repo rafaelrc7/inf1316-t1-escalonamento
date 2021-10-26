@@ -22,6 +22,13 @@ SList *slist_create(int (*fun_ordering)(void *, void *))
 	return slist;
 }
 
+void slist_destroy(SList *slist)
+{
+	while (!slist_is_empty(slist))
+		free(slist_remove(slist));
+	free(slist);
+}
+
 void slist_insert(SList *slist, void *ptr)
 {
 	Node *node = (Node *)malloc(sizeof(Node));

@@ -71,7 +71,7 @@ int main(void)
 	}
 
 	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
-	shm_start_queue_fd = shm_open(SHM_NAME, O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+	shm_start_queue_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 	shm_start_queue_ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_start_queue_fd, 0);
 
 	while (is_running) {
@@ -165,6 +165,8 @@ int main(void)
 
 	printf("[INFO] Finalizando escalonador.\n");
 
+	delete_queue(ready_queue);
+	slist_destroy(io_proc_list);
 	sem_close(sem_start_queue);
 	close(shm_start_queue_fd);
 	sem_unlink(SEM_NAME);

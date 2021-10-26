@@ -10,6 +10,8 @@
 #include <unistd.h>
 
 #define EXEC_FILE "exec.txt"
+#define SEM_NAME "/sem_escalonador_rr"
+#define SHM_NAME "/shm_escalonador_rr"
 
 float timevaldiff(struct timeval start, struct timeval end);
 
@@ -22,8 +24,8 @@ int main(void)
 
 	FILE *exec_file_fd = fopen(EXEC_FILE, "r");
 
-	sem_start_queue = sem_open("/sem_escalonador_rr", O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
-	shm_start_queue_fd = shm_open("/shm_escalonador_rr", O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
+	shm_start_queue_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 	ftruncate(shm_start_queue_fd, 4096);
 	shm_start_queue_ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_start_queue_fd, 0);
 	*(unsigned char *)shm_start_queue_ptr = 0;
@@ -55,6 +57,11 @@ int main(void)
 	*(unsigned char *)shm_start_queue_ptr = 2;
 
 	fclose(exec_file_fd);
+	sem_close(sem_start_queue);
+	sem_unlink(SEM_NAME);
+	close(shm_start_queue_fd);
+	shm_unlink(SHM_NAME);
+
 	return 0;
 }
 
