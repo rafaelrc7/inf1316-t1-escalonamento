@@ -13,11 +13,11 @@ struct _queue {
 	Node *start, *end;
 };
 
-Queue *create_queue();
-void delete_queue(Queue *queue);
-void enqueue(Queue *queue, void *item);
-void *dequeue(Queue *queue);
-int is_queue_empty(Queue *queue);
+Queue *queue_create();
+void queue_destroy(Queue *queue);
+void queue_enqueue(Queue *queue, void *item);
+void *queue_dequeue(Queue *queue);
+int queue_is_empty(Queue *queue);
 
 #endif /* ifndef _QUEUE_H_ */
 

@@ -58,7 +58,7 @@ int main(void)
 	sigaction(SIGINT, &s_action, NULL);
 	sigaction(SIGTERM, &s_action, NULL);
 
-	ready_queue = create_queue();
+	ready_queue = queue_create();
 	if (!ready_queue) {
 		fprintf(stderr, "ERRO: Não foi possível criar fila de prontos.\nAbortando programa.\n");
 		exit(EXIT_FAILURE);
@@ -95,7 +95,7 @@ int main(void)
 			kill(pid, SIGSTOP);
 			proc->pid = pid;
 			proc->local_pid = local_pid++;
-			enqueue(ready_queue, (void *)proc);
+			queue_enqueue(ready_queue, (void *)proc);
 #ifdef DEBUG
 			printf("[INFO] Criando novo processo \"%s\" de PID %d.\tPID local: %lu\n", proc->name, proc->pid, proc->local_pid);
 #endif
@@ -107,7 +107,7 @@ int main(void)
 		while(io_proc) {
 			if (timevaldiff(io_proc->io_start, now) > io_proc->io_time) {
 				IOProcess *tmp = (IOProcess *)slist_iterator_remove(io_proc_list);
-				enqueue(ready_queue, tmp->proc);
+				queue_enqueue(ready_queue, tmp->proc);
 				print_ready_queue(curr_proc, ready_queue);
 				free(tmp);
 			}
@@ -115,10 +115,10 @@ int main(void)
 		}
 
 		if (!curr_proc) {
-			if (is_queue_empty(ready_queue))
+			if (queue_is_empty(ready_queue))
 				continue;
 
-			curr_proc = dequeue(ready_queue);
+			curr_proc = queue_dequeue(ready_queue);
 			gettimeofday(&start, NULL);
 			kill(curr_proc->pid, SIGCONT);
 #ifdef DEBUG
@@ -156,7 +156,7 @@ int main(void)
 #ifdef DEBUG
 			printf("[INFO] Pausando processo \"%s\" de PID %d.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
 #endif
-			enqueue(ready_queue, (void *)curr_proc);
+			queue_enqueue(ready_queue, (void *)curr_proc);
 			curr_proc = NULL;
 			print_ready_queue(curr_proc, ready_queue);
 		}
@@ -171,12 +171,12 @@ int main(void)
 		free(curr_proc);
 	}
 
-	while (!is_queue_empty(ready_queue)) {
-		Process *process = dequeue(ready_queue);
+	while (!queue_is_empty(ready_queue)) {
+		Process *process = queue_dequeue(ready_queue);
 		free(process->name);
 		free(process);
 	}
-	delete_queue(ready_queue);
+	queue_destroy(ready_queue);
 
 
 	while (!slist_is_empty(io_proc_list)) {
