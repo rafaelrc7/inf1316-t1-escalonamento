@@ -30,12 +30,12 @@ void slist_insert(SList *slist, void *ptr)
 
 	node->ptr = ptr;
 
-	if (slist_is_empty(slist) || slist->fun_ordering(slist->head, node) > 0) {
+	if (slist_is_empty(slist) || slist->fun_ordering(slist->head->ptr, ptr) > 0) {
 		node->next = slist->head;
 		slist->head = node;
 	} else {
 		Node *curr = slist->head;
-		while (curr->next && slist->fun_ordering(curr->next, node) < 0)
+		while (curr->next && slist->fun_ordering(curr->next->ptr, ptr) < 0)
 			curr = curr->next;
 		node->next = curr->next;
 		curr->next = node;
@@ -96,6 +96,7 @@ void *slist_remove_index(SList *slist, unsigned long int index)
 	next = node->next;
 	free(node);
 	tmp->next = next;
+	--slist->tam;
 
 	return ptr;
 }
@@ -110,22 +111,23 @@ unsigned int slist_is_empty(SList *slist)
 	return slist->tam == 0;
 }
 
-void slist_iterator_head(SList *slist)
+void *slist_iterator_head(SList *slist)
 {
 	slist->curr = slist->head;
 	slist->curr_index = 0;
+
+
+	return slist->curr ? slist->curr->ptr : NULL;
 }
 
 void *slist_iterator_next(SList *slist)
 {
-	void *ptr;
 	if (!slist->curr)
 		return NULL;
 
-	ptr = slist->curr->ptr;
 	slist->curr = slist->curr->next;
 	++slist->curr_index;
-	return ptr;
+	return slist->curr ? slist->curr->ptr : NULL;
 }
 
 void *slist_iterator_remove(SList *slist)

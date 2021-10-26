@@ -10,7 +10,7 @@ void *slist_peek(SList *slist);
 void *slist_remove_index(SList *slist, unsigned long int index);
 unsigned long int slist_size(SList *slist);
 unsigned int slist_is_empty(SList *slist);
-void slist_iterator_head(SList *slist);
+void *slist_iterator_head(SList *slist);
 void *slist_iterator_next(SList *slist);
 void *slist_iterator_remove(SList *slist);
 
