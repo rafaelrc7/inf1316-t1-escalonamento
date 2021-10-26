@@ -49,7 +49,7 @@ void *queue_dequeue(Queue *queue)
 	if (queue->start == NULL)
 		queue->end = NULL;
 
-	val = node->val;
+	val = node->ptr;
 
 	free(node);
 

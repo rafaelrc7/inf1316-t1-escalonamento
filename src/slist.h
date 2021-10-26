@@ -1,7 +1,14 @@
 #ifndef _SCLIST_H
 #define _SCLIST_H
 
+#include "node.h"
+
 typedef struct _slist SList;
+struct _slist {
+	int (*fun_ordering)(void *, void *);
+	Node *head, *curr;
+	unsigned long int tam, curr_index;
+};
 
 SList *slist_create(int (*fun_ordering)(void *, void *));
 void slist_destroy(SList *slist);

@@ -55,6 +55,7 @@ int main(void)
 
 		msg.is_init_absolute = is_string_number(msg.proc_init_rel);
 		if (msg.is_init_absolute) {
+			puts("absolute");
 			msg.proc_init_abs = (unsigned long int)atol(msg.proc_init_rel);
 		}
 

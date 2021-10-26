@@ -1,0 +1,314 @@
+#include <fcntl.h>
+#include <semaphore.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#include "queue.h"
+#include "slist.h"
+
+#define IO_TIME 3000.0f	/* ms */
+
+#define SEM_NAME "/sem_escalonador_rt"
+#define SHM_NAME "/shm_escalonador_rt"
+
+#define NAME_BUFF_LEN 1024
+typedef struct _msg {
+	unsigned long int tempo_duracao;
+	char proc_name[NAME_BUFF_LEN];
+	unsigned char is_init_absolute;
+	union {
+		unsigned long int proc_init_abs;
+		char proc_init_rel[NAME_BUFF_LEN];
+	};
+} Msg;
+#define MSG_BUFF_LEN (sizeof(Msg))
+
+typedef struct _process {
+	char *name;
+	unsigned long int local_pid;
+	float init_time, burst_time;
+	pid_t pid;
+} Process;
+
+typedef struct _io_process {
+	Process *proc;
+	float io_time;
+	struct timeval io_start;
+} IOProcess;
+
+typedef struct _proc_init_hist {
+	Process *proc;
+} ProcInitHist;
+
+static float timevaldiff(struct timeval start, struct timeval end);
+static void print_ready_queue(Process *curr_proc, SList *slist);
+static int slist_proc_ordering(void *proc1, void *proc2);
+static int slist_proc_hist_ordering(void *proc1, void *proc2);
+static void sig_handler (int sig);
+
+static volatile sig_atomic_t is_running = 1;
+
+int main(void)
+{
+	SList *io_proc_list, *ready_queue, *proc_hist_list;
+	sem_t *sem_start_queue;
+	void *shm_start_queue_ptr;
+	Process *curr_proc = NULL;
+	IOProcess *io_proc;
+	unsigned long int local_pid = 0;
+	int shm_start_queue_fd, stat_loc;
+	struct timeval start, now;
+	struct sigaction s_action;
+
+	s_action.sa_handler = sig_handler;
+	sigemptyset(&s_action.sa_mask);
+	s_action.sa_flags = 0;
+
+	sigaction(SIGINT, &s_action, NULL);
+	sigaction(SIGTERM, &s_action, NULL);
+
+	ready_queue = slist_create(&slist_proc_ordering);
+	if (!ready_queue) {
+		fprintf(stderr, "ERRO: Não foi possível criar fila de prontos.\nAbortando programa.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	io_proc_list = slist_create(&slist_proc_ordering);
+	if (!io_proc_list) {
+		fprintf(stderr, "ERRO: Não foi possível criar fila de IO.\nAbortando programa.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	proc_hist_list = slist_create(&slist_proc_hist_ordering);
+	if (!proc_hist_list) {
+		fprintf(stderr, "ERRO: Não foi possível criar fila de IO.\nAbortando programa.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
+	shm_start_queue_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+	ftruncate(shm_start_queue_fd, MSG_BUFF_LEN);
+	shm_start_queue_ptr = mmap(NULL, MSG_BUFF_LEN, PROT_READ | PROT_WRITE, MAP_SHARED, shm_start_queue_fd, 0);
+
+	while (is_running) {
+		if (*(unsigned char*)shm_start_queue_ptr) {
+			Msg *msg;
+			Process *proc = (Process *)malloc(sizeof(Process));
+			ProcInitHist *proc_init_hist = (ProcInitHist *)malloc(sizeof(ProcInitHist));
+			pid_t pid;
+			sem_wait(sem_start_queue);
+			msg = ((Msg *)((unsigned char *)shm_start_queue_ptr + 1));
+			proc->name = (char *)malloc(sizeof(char) * (strlen(msg->proc_name) + 1));
+			strcpy(proc->name, msg->proc_name);
+			proc->burst_time = (float)msg->tempo_duracao;
+
+			if (msg->is_init_absolute) {
+				proc->init_time = (float)msg->proc_init_abs;
+			} else {
+				unsigned char found = 0;
+				const char *proc_init = msg->proc_init_rel;
+				ProcInitHist *proc_hist = slist_iterator_head(proc_hist_list);
+				while (!found && proc_hist) {
+					if (strcmp(proc_hist->proc->name, proc_init) == 0) {
+						proc->init_time = proc_hist->proc->init_time + proc_hist->proc->burst_time;
+						found = 1;
+					}
+					proc_hist = slist_iterator_next(proc_hist_list);
+				}
+
+				if (!found) {
+					fprintf(stderr, "Não existe processo anterior\n");
+					exit(EXIT_FAILURE);
+				}
+			}
+
+			ProcInitHist *proc_hist = slist_iterator_head(proc_hist_list);
+			while (proc_hist) {
+				if (proc->init_time > proc_hist->proc->init_time && proc->init_time < proc_hist->proc->init_time + proc_hist->proc->burst_time)
+					exit(EXIT_FAILURE);
+				else if (proc->init_time < proc_hist->proc->init_time && proc->init_time + proc->burst_time > proc_hist->proc->init_time)
+					exit(EXIT_FAILURE);
+				proc_hist = slist_iterator_next(proc_hist_list);
+			}
+
+			proc_init_hist->proc = proc;
+			slist_insert(proc_hist_list, proc_init_hist);
+
+			*(unsigned char*)shm_start_queue_ptr = 0;
+			sem_post(sem_start_queue);
+			pid = fork();
+			if (!pid) {
+				execlp(proc->name, proc->name, NULL);
+				fprintf(stderr, "ERRO: não foi possível iniciar o processo \"%s\"\n", proc->name);
+				exit(EXIT_FAILURE);
+			}
+			kill(pid, SIGSTOP);
+			proc->pid = pid;
+			proc->local_pid = local_pid++;
+			slist_insert(ready_queue, (void *)proc);
+#ifdef DEBUG
+			printf("[INFO] Criando novo processo \"%s\" de PID %d.\tPID local: %lu\n", proc->name, proc->pid, proc->local_pid);
+#endif
+			print_ready_queue(curr_proc, ready_queue);
+		}
+
+		gettimeofday(&now, NULL);
+		io_proc = slist_iterator_head(io_proc_list);
+		while(io_proc) {
+			if (timevaldiff(io_proc->io_start, now) > io_proc->io_time) {
+				IOProcess *tmp = (IOProcess *)slist_iterator_remove(io_proc_list);
+				slist_insert(ready_queue, (void *)tmp->proc);
+				print_ready_queue(curr_proc, ready_queue);
+				free(tmp);
+			}
+			io_proc = (IOProcess *)slist_iterator_next(io_proc_list);
+		}
+
+		if (!curr_proc) {
+			if (slist_is_empty(ready_queue))
+				continue;
+
+			curr_proc = slist_remove(ready_queue);
+			gettimeofday(&start, NULL);
+			kill(curr_proc->pid, SIGCONT);
+#ifdef DEBUG
+			printf("[INFO] Executando processo \"%s\" de PID %d.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
+#endif
+			print_ready_queue(curr_proc, ready_queue);
+		}
+
+		if (waitpid(curr_proc->pid, &stat_loc, WNOHANG | WUNTRACED)) {
+			if (WIFEXITED(stat_loc)) {
+#ifdef DEBUG
+				printf("[INFO] Processo \"%s\" de PID %d finalizou.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
+#endif
+				ProcInitHist *proc_hist = slist_iterator_head(proc_hist_list);
+				while (proc_hist) {
+					if (proc_hist->proc->local_pid == curr_proc->local_pid) {
+						free(slist_iterator_remove(proc_hist_list));
+						break;
+					}
+					proc_hist = slist_iterator_next(proc_hist_list);
+				}
+
+				free(curr_proc->name);
+				free(curr_proc);
+				curr_proc = NULL;
+			} else if (WIFSTOPPED(stat_loc)) {
+#ifdef DEBUG
+				printf("[INFO] Processo \"%s\" de PID %d entrou em I/O.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
+#endif
+				IOProcess *io_proc = (IOProcess *)malloc(sizeof(IOProcess));
+				io_proc->proc = curr_proc;
+				gettimeofday(&io_proc->io_start, NULL);
+				io_proc->io_time = IO_TIME;
+				slist_insert(io_proc_list, io_proc);
+
+				curr_proc = NULL;
+			}
+			continue;
+		}
+
+		gettimeofday(&now, NULL);
+		if (timevaldiff(start, now) > curr_proc->burst_time) {
+			kill(curr_proc->pid, SIGSTOP);
+#ifdef DEBUG
+			printf("[INFO] Pausando processo \"%s\" de PID %d.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
+#endif
+			slist_insert(ready_queue, (void *)curr_proc);
+			curr_proc = NULL;
+			print_ready_queue(curr_proc, ready_queue);
+		}
+
+
+	}
+
+	printf("[INFO] Finalizando escalonador.\n");
+
+	if (curr_proc) {
+		free(curr_proc->name);
+		free(curr_proc);
+	}
+
+	while (!slist_is_empty(ready_queue)) {
+		Process *process = slist_remove(ready_queue);
+		free(process->name);
+		free(process);
+	}
+	slist_destroy(ready_queue);
+
+
+	while (!slist_is_empty(io_proc_list)) {
+		IOProcess *io_process = slist_remove(io_proc_list);
+		Process *process = io_process->proc;
+		free(process->name);
+		free(process);
+		free(io_process);
+	}
+	slist_destroy(io_proc_list);
+
+	sem_close(sem_start_queue);
+	close(shm_start_queue_fd);
+	sem_unlink(SEM_NAME);
+	shm_unlink(SHM_NAME);
+
+	return 0;
+}
+
+float timevaldiff(struct timeval start, struct timeval end)
+{
+	return (end.tv_sec - start.tv_sec) * 1000.0f + (end.tv_usec - start.tv_usec) / 1000.0f;
+}
+
+void print_ready_queue(Process *curr_proc, SList *slist)
+{
+	Node *node = slist->head;
+
+	if (curr_proc)
+		printf("%lu\t[ ", curr_proc->local_pid);
+	else
+		printf("-1\t[ ");
+	while(node) {
+		printf("%lu\t", ((Process *)node->ptr)->local_pid);
+		node = node->next;
+	}
+	printf("]\n");
+}
+
+static int slist_proc_ordering(void *proc1, void *proc2)
+{
+	unsigned long int init_time1 = ((IOProcess *)proc1)->proc->init_time;
+	unsigned long int init_time2 = ((IOProcess *)proc2)->proc->init_time;
+
+	if (init_time1 > init_time2)
+		return 1;
+	else if (init_time1 < init_time2)
+		return -1;
+	else
+		return 0;
+}
+
+int slist_proc_hist_ordering(void *proc1, void *proc2)
+{
+	unsigned long int local_pid1 = ((IOProcess *)proc1)->proc->local_pid;
+	unsigned long int local_pid2 = ((IOProcess *)proc2)->proc->local_pid;
+
+	if (local_pid1 > local_pid2)
+		return 1;
+	else if (local_pid1 < local_pid2)
+		return -1;
+	else
+		return 0;
+}
+
+void sig_handler (int sig)
+{
+	is_running = 0;
+}

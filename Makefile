@@ -1,6 +1,6 @@
 ##########TEMPLATE##########
 
-TARGET=interpretador_rr escalonador_rr prog_cpu prog_io
+TARGET=interpretador_rr escalonador_rr interpretador_rt escalonador_rt prog_cpu prog_io
 
 BINDIR=bin
 SRCDIR=src
@@ -33,6 +33,8 @@ all: $(BIN)
 
 $(BINDIR)/escalonador_rr: $(OBJDIR)/escalonador_rr.o $(OBJDIR)/queue.o $(OBJDIR)/slist.o
 $(BINDIR)/interpretador_rr: $(OBJDIR)/interpretador_rr.o
+$(BINDIR)/escalonador_rt: $(OBJDIR)/escalonador_rt.o $(OBJDIR)/queue.o $(OBJDIR)/slist.o
+$(BINDIR)/interpretador_rt: $(OBJDIR)/interpretador_rt.o
 $(BINDIR)/prog_cpu: $(OBJDIR)/prog_cpu.o
 $(BINDIR)/prog_io: $(OBJDIR)/prog_io.o
 

@@ -2,18 +2,6 @@
 
 #include "slist.h"
 
-typedef struct _node Node;
-struct _node {
-	Node *next;
-	void *ptr;
-};
-
-struct _slist {
-	int (*fun_ordering)(void *, void *);
-	Node *head, *curr;
-	unsigned long int tam, curr_index;
-};
-
 SList *slist_create(int (*fun_ordering)(void *, void *))
 {
 	SList *slist = (SList *)malloc(sizeof(SList));

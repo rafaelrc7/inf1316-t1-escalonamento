@@ -210,7 +210,7 @@ void print_ready_queue(Process *curr_proc, Queue *queue)
 	else
 		printf("-1\t[ ");
 	while(node) {
-		printf("%lu\t", ((Process *)node->val)->local_pid);
+		printf("%lu\t", ((Process *)node->ptr)->local_pid);
 		node = node->next;
 	}
 	printf("]\n");

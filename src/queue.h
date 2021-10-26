@@ -1,14 +1,9 @@
 #ifndef _QUEUE_H_
 #define _QUEUE_H_
 
+#include "node.h"
+
 typedef struct _queue Queue;
-typedef struct _node Node;
-
-struct _node {
-	void *val;
-	Node *next;
-};
-
 struct _queue {
 	Node *start, *end;
 };
