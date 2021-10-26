@@ -25,11 +25,11 @@ int main(void)
 	FILE *exec_file_fd = fopen(EXEC_FILE, "r");
 
 	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
-	shm_start_queue_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+	while((shm_start_queue_fd = shm_open(SHM_NAME, O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) < 0);
 	ftruncate(shm_start_queue_fd, 4096);
 	shm_start_queue_ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_start_queue_fd, 0);
+
 	*(unsigned char *)shm_start_queue_ptr = 0;
-	sem_post(sem_start_queue);
 	sem_post(sem_start_queue);
 
 	while(!feof(exec_file_fd)) {
@@ -58,9 +58,7 @@ int main(void)
 
 	fclose(exec_file_fd);
 	sem_close(sem_start_queue);
-	sem_unlink(SEM_NAME);
 	close(shm_start_queue_fd);
-	shm_unlink(SHM_NAME);
 
 	return 0;
 }

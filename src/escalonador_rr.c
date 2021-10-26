@@ -72,6 +72,7 @@ int main(void)
 
 	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
 	shm_start_queue_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+	ftruncate(shm_start_queue_fd, 4096);
 	shm_start_queue_ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_start_queue_fd, 0);
 
 	while (is_running) {
@@ -106,13 +107,11 @@ int main(void)
 		while(io_proc) {
 			if (timevaldiff(io_proc->io_start, now) > io_proc->io_time) {
 				IOProcess *tmp = (IOProcess *)slist_iterator_remove(io_proc_list);
-				enqueue(ready_queue, io_proc->proc);
+				enqueue(ready_queue, tmp->proc);
 				print_ready_queue(curr_proc, ready_queue);
-				free(io_proc);
-				io_proc = tmp;
-			} else {
-				io_proc = (IOProcess *)slist_iterator_next(io_proc_list);
+				free(tmp);
 			}
+			io_proc = (IOProcess *)slist_iterator_next(io_proc_list);
 		}
 
 		if (!curr_proc) {
@@ -133,6 +132,8 @@ int main(void)
 #ifdef DEBUG
 				printf("[INFO] Processo \"%s\" de PID %d finalizou.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
 #endif
+				free(curr_proc->name);
+				free(curr_proc);
 				curr_proc = NULL;
 			} else if (WIFSTOPPED(stat_loc)) {
 #ifdef DEBUG
