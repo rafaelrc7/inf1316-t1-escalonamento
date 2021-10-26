@@ -166,8 +166,28 @@ int main(void)
 
 	printf("[INFO] Finalizando escalonador.\n");
 
+	if (curr_proc) {
+		free(curr_proc->name);
+		free(curr_proc);
+	}
+
+	while (!is_queue_empty(ready_queue)) {
+		Process *process = dequeue(ready_queue);
+		free(process->name);
+		free(process);
+	}
 	delete_queue(ready_queue);
+
+
+	while (!slist_is_empty(io_proc_list)) {
+		IOProcess *io_process = slist_remove(io_proc_list);
+		Process *process = io_process->proc;
+		free(process->name);
+		free(process);
+		free(io_process);
+	}
 	slist_destroy(io_proc_list);
+
 	sem_close(sem_start_queue);
 	close(shm_start_queue_fd);
 	sem_unlink(SEM_NAME);

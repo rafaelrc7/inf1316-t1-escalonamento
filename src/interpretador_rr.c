@@ -54,8 +54,6 @@ int main(void)
 
 	}
 
-	*(unsigned char *)shm_start_queue_ptr = 2;
-
 	fclose(exec_file_fd);
 	sem_close(sem_start_queue);
 	close(shm_start_queue_fd);
