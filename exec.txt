@@ -1,4 +1,5 @@
-Run cat
-Run proc
-Run minecraft
-Run fuck
+Run ./prog_cpu I=0 D=10
+Run ./prog_cpu I=10 D=5
+Run ./rog_cpu I=30 D=5
+Run ./prog_io I=15 D=2
+Run ./prog_cpu I=./prog_io D=5
