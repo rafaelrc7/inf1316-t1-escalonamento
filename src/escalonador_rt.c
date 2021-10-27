@@ -48,7 +48,7 @@ typedef struct _io_process {
 } IOProcess;
 
 static float timevaldiff(struct timeval start, struct timeval end);
-static void print_schedule(Process *curr_proc, Process **schedule);
+static void print_schedule(unsigned long int curr_index, Process **schedule);
 static int slist_schedule_ordering(void *proc1, void *proc2);
 static void sig_handler (int sig);
 static void cleanup_sem(void);
@@ -67,7 +67,7 @@ int main(void)
 	Process **schedule;
 	Process *curr_proc = NULL;
 	IOProcess *io_proc;
-	unsigned long int curr_index, schedule_size;
+	unsigned long int curr_index = 0, schedule_size;
 	int stat_loc, ret;
 	unsigned int process_count = 0;
 	float time;
@@ -132,13 +132,14 @@ int main(void)
 			if (create_process(schedule, schedule_size) == 0) {
 				if (process_count++ == 0)
 					gettimeofday(&period_start, NULL);
-				print_schedule(curr_proc, schedule);
+				print_schedule(curr_index, schedule);
 			}
 		}
 
 		/* pula loop se não tiver processos em execução */
 		if (!process_count)
 			continue;
+
 
 		/* Checa se algum processo bloqueado em I/O pode voltar a estar pronto */
 		gettimeofday(&now, NULL);
@@ -147,7 +148,6 @@ int main(void)
 			if (timevaldiff(io_proc->io_start, now) > io_proc->io_time) {
 				IOProcess *tmp = (IOProcess *)slist_iterator_remove(io_proc_list);
 				tmp->proc->is_blocked = 0;
-				print_schedule(curr_proc, schedule);
 				free(tmp);
 			}
 			io_proc = (IOProcess *)slist_iterator_next(io_proc_list);
@@ -170,12 +170,12 @@ int main(void)
 			if (!schedule[curr_index] || schedule[curr_index]->is_blocked)
 				continue;
 
+			print_schedule(curr_index, schedule);
 			curr_proc = schedule[curr_index];
 			kill(curr_proc->pid, SIGCONT);
 #ifdef DEBUG
 			printf("[INFO] Executando processo \"%s\" de PID %d.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
 #endif
-			print_schedule(curr_proc, schedule);
 		}
 
 		/* Checa se o processo atual em execução entrou em I/O ou finalizou */
@@ -208,6 +208,7 @@ int main(void)
 
 				curr_proc = NULL;
 			}
+			print_schedule(curr_index, schedule);
 			continue;
 		}
 
@@ -219,7 +220,7 @@ int main(void)
 			printf("[INFO] Preempção no processo \"%s\" de PID %d.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
 #endif
 			curr_proc = NULL;
-			print_schedule(curr_proc, schedule);
+			print_schedule(curr_index, schedule);
 		}
 
 
@@ -377,14 +378,16 @@ float timevaldiff(struct timeval start, struct timeval end)
 	return (end.tv_sec - start.tv_sec) * 1000.0f + (end.tv_usec - start.tv_usec) / 1000.0f;
 }
 
-static void print_schedule(Process *curr_proc, Process **schedule)
+static void print_schedule(unsigned long int curr_index, Process **schedule)
 {
 	unsigned long int i, size = ceil(PERIOD_TIME / SLICE_TIME);
+	Process *curr_proc = schedule[curr_index];
 
+	printf("\n TS: %lu\tCurrent Proc: ", curr_index);
 	if (curr_proc)
-		printf("\n curr_proc: %lu\t schedule: | ", curr_proc->local_pid);
+		printf("%lu\tschedule: | ", curr_proc->local_pid);
 	else
-		printf("-1\t| ");
+		printf("x\tschedule : | ");
 
 	for (i = 0; i < size; ++i) {
 		Process *proc = schedule[i];
