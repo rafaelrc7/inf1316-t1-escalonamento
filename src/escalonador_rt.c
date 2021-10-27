@@ -95,7 +95,7 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	sem_message = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
+	sem_message = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1);
 	if (sem_message == SEM_FAILED) {
 		perror("sem_open()");
 		exit(EXIT_FAILURE);
@@ -120,6 +120,10 @@ int main(void)
 		perror("mmap()");
 		exit(EXIT_FAILURE);
 	}
+
+	sem_wait(sem_message);
+	*(unsigned char*)shm_message_ptr = 0;
+	sem_post(sem_message);
 
 	/* LOOP PRINCIPAL DO ESCALONADOR */
 	while (is_running) {

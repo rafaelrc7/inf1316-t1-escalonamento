@@ -43,7 +43,7 @@ int main(void)
 		goto erro1;
 	}
 
-	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
+	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1);
 	if (sem_start_queue == SEM_FAILED) {
 		perror("sem_start_queue()");
 		goto erro2;
@@ -62,7 +62,6 @@ int main(void)
 	}
 
 	*(unsigned char *)shm_start_queue_ptr = 0;
-	sem_post(sem_start_queue);
 
 	while(!feof(exec_file_fd)) {
 		int ret;

@@ -24,13 +24,12 @@ int main(void)
 
 	FILE *exec_file_fd = fopen(EXEC_FILE, "r");
 
-	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 0);
+	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1);
 	while((shm_start_queue_fd = shm_open(SHM_NAME, O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) < 0);
 	ftruncate(shm_start_queue_fd, 4096);
 	shm_start_queue_ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_start_queue_fd, 0);
 
 	*(unsigned char *)shm_start_queue_ptr = 0;
-	sem_post(sem_start_queue);
 
 	while(!feof(exec_file_fd)) {
 		int ret;
