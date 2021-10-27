@@ -51,7 +51,7 @@ int main(void)
 		int ret;
 		char buff[4095];
 		ret = fscanf(exec_file_fd, "Run %[^\n]\n", buff);
-		if (ret != 3) {
+		if (ret != 1) {
 			fscanf(stderr, "Arquivo no formato errado.\n");
 			goto erro4;
 		}
