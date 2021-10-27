@@ -157,3 +157,6 @@ Avança o iterador da lista, retornando o próximo item. retorna NULL se a itera
 #### `void *slist_iterator_remove(SList *slist);`
 Remove o item atualmente apontado pelo iterador da lista e o retorna.
 
+## Tratamento de erros
+Não existe classificação de tipos de erro no código em si. Porém os programas tratam erros de duas maneiras, erros "fatais" e não fatais. Falhas em funções do sistema como `malloc()` e `calloc()`, dentre outras, são tratados como erro fatal e o programa é encerrado. Porém alguns erros, que são esperados e trataveis, como, por exemplo, tentar executar um programa que não existe (não encontrado pela `exec()`) apenas gerará uma mensagem de erro e o processo será ignorado.
+
