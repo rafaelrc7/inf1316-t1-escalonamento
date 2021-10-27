@@ -3,5 +3,6 @@ obj/
 .cache/
 *.o
 *.dep
+*.pdf
 compile_commands.json
 
