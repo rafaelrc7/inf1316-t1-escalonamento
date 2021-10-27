@@ -65,11 +65,11 @@ int main(void)
 {
 	SList *io_proc_list;
 	Process **schedule;
-	unsigned long int schedule_size;
 	Process *curr_proc = NULL;
 	IOProcess *io_proc;
-	unsigned long int curr_index;
+	unsigned long int curr_index, schedule_size;
 	int stat_loc, ret;
+	unsigned int process_count = 0;
 	float time;
 	struct timeval period_start, now;
 	struct sigaction s_action;
@@ -122,13 +122,18 @@ int main(void)
 	}
 
 	/* LOOP PRINCIPAL DO ESCALONADOR */
-	gettimeofday(&period_start, NULL);
 	while (is_running) {
 		/* Checa se interpretador enviou novo processo para iniciar */
 		if (*(unsigned char*)shm_message_ptr) {
-			if (create_process(schedule, schedule_size) != 0)
+			if (create_process(schedule, schedule_size) == 0) {
+				if (process_count++ == 0)
+					gettimeofday(&period_start, NULL);
 				print_schedule(curr_proc, schedule);
+			}
 		}
+
+		if (!process_count)
+			continue;
 
 		/* Checa se algum processo bloqueado em I/O pode voltar a estar pronto */
 		gettimeofday(&now, NULL);
@@ -182,6 +187,7 @@ int main(void)
 				}
 				free(curr_proc->name);
 				free(curr_proc);
+				--process_count;
 				curr_proc = NULL;
 			} else if (WIFSTOPPED(stat_loc)) {
 				/* I/O */
