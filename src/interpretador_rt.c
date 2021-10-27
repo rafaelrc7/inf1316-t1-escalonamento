@@ -68,7 +68,7 @@ int main(void)
 		Msg msg;
 		ret = fscanf(exec_file_fd, "Run %s I=%s D=%lu\n", msg.proc_name, msg.proc_init_rel, &msg.tempo_duracao);
 		if (ret != 3) {
-			fscanf(stderr, "Arquivo no formato errado.");
+			fscanf(stderr, "Arquivo no formato errado.\n");
 			goto erro4;
 		}
 

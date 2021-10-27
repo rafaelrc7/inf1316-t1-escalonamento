@@ -23,11 +23,27 @@ int main(void)
 	struct timeval start, now;
 
 	FILE *exec_file_fd = fopen(EXEC_FILE, "r");
+	if (!exec_file_fd) {
+		perror("fopen()");
+		goto erro1;
+	}
 
 	sem_start_queue = sem_open(SEM_NAME, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, 1);
+	if (sem_start_queue == SEM_FAILED) {
+		perror("sem_start_queue()");
+		goto erro2;
+	}
 	while((shm_start_queue_fd = shm_open(SHM_NAME, O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP)) < 0);
-	ftruncate(shm_start_queue_fd, 4096);
+	if (ftruncate(shm_start_queue_fd, 4096) == -1) {
+		perror("ftruncate()");
+		goto erro3;
+	}
+
 	shm_start_queue_ptr = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, shm_start_queue_fd, 0);
+	if (shm_start_queue_ptr == MAP_FAILED) {
+		perror("mmap()");
+		goto erro4;
+	}
 
 	*(unsigned char *)shm_start_queue_ptr = 0;
 
@@ -35,6 +51,10 @@ int main(void)
 		int ret;
 		char buff[4095];
 		ret = fscanf(exec_file_fd, "Run %[^\n]\n", buff);
+		if (ret != 3) {
+			fscanf(stderr, "Arquivo no formato errado.\n");
+			goto erro4;
+		}
 
 		while(*(unsigned char *)shm_start_queue_ptr);
 		gettimeofday(&start, NULL);
@@ -47,9 +67,8 @@ int main(void)
 
 		printf("[INTERPRETADOR] Proc %s iniciado.\n", buff);
 
-		do {
-			gettimeofday(&now, NULL);
-		} while(timevaldiff(start, now) < 1000.0f);
+		do gettimeofday(&now, NULL);
+		while(timevaldiff(start, now) < 1000.0f);
 
 	}
 
@@ -58,6 +77,16 @@ int main(void)
 	close(shm_start_queue_fd);
 
 	return 0;
+
+	/* limpeza de erro */
+erro4:
+	close(shm_start_queue_fd);
+erro3:
+	sem_close(sem_start_queue);
+erro2:
+	fclose(exec_file_fd);
+erro1:
+	return EXIT_FAILURE;
 }
 
 float timevaldiff(struct timeval start, struct timeval end)
