@@ -30,7 +30,9 @@ RM_R = rm -r
 
 .PHONY: all clean
 
-all: $(BIN) $(DOCS)
+all: $(BIN)
+
+docs: $(DOCS)
 
 Relatorio.pdf: README.md
 	pandoc -V geometry:margin=1in $^ -o $@
@@ -59,4 +61,4 @@ $(OBJDIR) $(DEPDIR) $(BINDIR):
 ##########CLEAN##########
 
 clean:
-	$(RM_R) $(DEPDIR) $(OBJDIR) $(TARGETDIR) $(BINDIR)
+	$(RM_R) $(DEPDIR) $(OBJDIR) $(TARGETDIR) $(BINDIR) $(DOCS)
