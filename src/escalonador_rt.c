@@ -91,7 +91,7 @@ int main(void)
 
 	io_proc_list = slist_create(&slist_schedule_ordering);
 	if (!io_proc_list) {
-		perror("slist_create()");
+		fprintf(stderr, "ERRO: slist_create() falhou.\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -132,6 +132,7 @@ int main(void)
 			}
 		}
 
+		/* pula loop se não tiver processos em execução */
 		if (!process_count)
 			continue;
 
@@ -334,7 +335,7 @@ static int create_process(Process **schedule, unsigned long int schedule_size)
 			execlp(proc->name, proc->name, NULL);
 		write(pipedes[1], &errno, sizeof(errno));
 		close(pipedes[1]);
-		exit(EXIT_FAILURE);
+		_exit(EXIT_FAILURE);
 	} else {
 		/* PARENT PROCESS */
 		close(pipedes[1]);
