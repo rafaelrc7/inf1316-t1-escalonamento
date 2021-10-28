@@ -5,6 +5,22 @@
 
 > Pedro Piquet Fernandes de Sousa (2011040)
 
+## Compilação
+
+Navegue para o diretório raíz do projeto, onde existe o arquivo **Makefile** e execute:
+
+`$ make`
+
+Todos os binários serão gerados na pasta **bin**, incluindo os escalonadores, interpretadores e programas de exemplo.
+
+Para gerar o pdf do relatório enviado:
+
+`$ make docs`
+
+Para limpar arquivos gerados:
+
+`$ make clean`
+
 ## Apresentação
 Neste arquivo vai ser documentado a arquitetura dos programas feitos para essa tarefa, além um exemplo de execução prática.
 
@@ -94,6 +110,12 @@ No caso do RT, o interpretador precisa passar muito mais informações sobre o p
 Por ter um agendamento mais "fixo", a estrutura de dados usada para armazenar a ordem dos processos é um simples array, onde cada indíce representa uma unidade de time slice de execução. Portanto se um processo tem `I=5` ele será posto no índice `5` do array e nos próximos `D` índices, indicando que ele também é executado nesses períodos. Como os processos apenas são removidos do array ao finalizarem, o estado de bloqueio é guardado em uma boleana.
 
 ## Módulos extras implementados
+
+### prog\_cpu
+Um programa simples que fica em um longo loop para simular um programa CPU bound.
+
+### prog\_io
+Um programa com um longo loop que é de vez em quando interrompido por um **SIGSTOP** para simular interrupção de I/O.
 
 ### Node
 Estrutura simples de um nó encadeado, possui dois campos:
