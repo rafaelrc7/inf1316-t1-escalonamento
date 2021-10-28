@@ -1,6 +1,6 @@
 ##########TEMPLATE##########
 
-TARGET=interpretador_rr escalonador_rr interpretador_rt escalonador_rt prog_cpu prog_io
+TARGET=interpretador_rr escalonador_rr interpretador_rt escalonador_rt prog_cpu prog_io P1 P2 P3 P4 P5 P6
 DOCS=Relatorio.pdf
 
 BINDIR=bin
@@ -43,6 +43,12 @@ $(BINDIR)/escalonador_rt: $(OBJDIR)/escalonador_rt.o $(OBJDIR)/queue.o $(OBJDIR)
 $(BINDIR)/interpretador_rt: $(OBJDIR)/interpretador_rt.o
 $(BINDIR)/prog_cpu: $(OBJDIR)/prog_cpu.o
 $(BINDIR)/prog_io: $(OBJDIR)/prog_io.o
+$(BINDIR)/P1: $(OBJDIR)/prog_cpu.o
+$(BINDIR)/P2: $(OBJDIR)/prog_cpu.o
+$(BINDIR)/P3: $(OBJDIR)/prog_io.o
+$(BINDIR)/P4: $(OBJDIR)/prog_cpu.o
+$(BINDIR)/P5: $(OBJDIR)/prog_cpu.o
+$(BINDIR)/P6: $(OBJDIR)/prog_cpu.o
 
 $(BIN): | $(BINDIR)
 	$(CC) -o $@ $^ $(LDFLAGS)
