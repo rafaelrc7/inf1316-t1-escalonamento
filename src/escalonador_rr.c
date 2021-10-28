@@ -39,7 +39,7 @@ static void sig_handler (int sig);
 static void cleanup_sem(void);
 static void cleanup_shm(void);
 
-static int create_process(Queue *ready_queue);
+static Process *create_process(Queue *ready_queue);
 
 static volatile sig_atomic_t is_running = 1;
 static sem_t *sem_message;
@@ -105,9 +105,12 @@ int main(void)
 	sem_post(sem_message);
 
 	while (is_running) {
+		/* Checa se existe processo pendente para ser criado */
 		if (*(unsigned char*)shm_message_ptr) {
-			if (create_process(ready_queue) == 0) {
+			Process *proc;
+			if ((proc = create_process(ready_queue))) {
 				print_ready_queue(curr_proc, ready_queue);
+				printf("Processo %lu criado e adicionado ao fim da fila.\n", proc->local_pid);
 			}
 		}
 
@@ -118,6 +121,7 @@ int main(void)
 				IOProcess *tmp = (IOProcess *)slist_iterator_remove(io_proc_list);
 				queue_enqueue(ready_queue, tmp->proc);
 				print_ready_queue(curr_proc, ready_queue);
+				printf("Processo %lu finaliza I/O, é desbloqueado e vai para o fim da fila.\n", tmp->proc->local_pid);
 				free(tmp);
 			}
 			io_proc = (IOProcess *)slist_iterator_next(io_proc_list);
@@ -130,30 +134,26 @@ int main(void)
 			curr_proc = queue_dequeue(ready_queue);
 			gettimeofday(&start, NULL);
 			kill(curr_proc->pid, SIGCONT);
-#ifdef DEBUG
-			printf("[INFO] Executando processo \"%s\" de PID %d.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
-#endif
 			print_ready_queue(curr_proc, ready_queue);
+			printf("Processo %lu entra em execução.\n", curr_proc->local_pid);
 		}
 
 		if (waitpid(curr_proc->pid, &stat_loc, WNOHANG | WUNTRACED)) {
 			if (WIFEXITED(stat_loc)) {
-#ifdef DEBUG
-				printf("[INFO] Processo \"%s\" de PID %d finalizou.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
-#endif
-				free(curr_proc->name);
-				free(curr_proc);
+				Process *proc = curr_proc;
 				curr_proc = NULL;
+				print_ready_queue(curr_proc, ready_queue);
+				printf("*Processo %lu finalizou.\n", proc->local_pid);
+				free(proc->name);
+				free(proc);
 			} else if (WIFSTOPPED(stat_loc)) {
-#ifdef DEBUG
-				printf("[INFO] Processo \"%s\" de PID %d entrou em I/O.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
-#endif
 				IOProcess *io_proc = (IOProcess *)malloc(sizeof(IOProcess));
 				io_proc->proc = curr_proc;
 				gettimeofday(&io_proc->io_start, NULL);
 				io_proc->io_time = IO_TIME;
 				slist_insert(io_proc_list, io_proc);
-
+				print_ready_queue(curr_proc, ready_queue);
+				printf("Processo %lu é interrompido por I/O e é bloqueado.\n", curr_proc->local_pid);
 				curr_proc = NULL;
 			}
 			continue;
@@ -161,13 +161,13 @@ int main(void)
 
 		gettimeofday(&now, NULL);
 		if (timevaldiff(start, now) > QUANTUM) {
+			Process *proc;
 			kill(curr_proc->pid, SIGSTOP);
-#ifdef DEBUG
-			printf("[INFO] Pausando processo \"%s\" de PID %d.\tPID local: %lu\n", curr_proc->name, curr_proc->pid, curr_proc->local_pid);
-#endif
 			queue_enqueue(ready_queue, (void *)curr_proc);
+			proc = curr_proc;
 			curr_proc = NULL;
 			print_ready_queue(curr_proc, ready_queue);
+			printf("Processo %lu sofre preempção e vai para o fim da fila.\n", proc->local_pid);
 		}
 
 
@@ -200,7 +200,7 @@ int main(void)
 	return 0;
 }
 
-static int create_process(Queue *ready_queue)
+static Process *create_process(Queue *ready_queue)
 {
 	static unsigned long local_pid = 0;
 
@@ -262,41 +262,37 @@ static int create_process(Queue *ready_queue)
 	proc->local_pid = local_pid++;
 	queue_enqueue(ready_queue, (void *)proc);
 
-#ifdef DEBUG
-	printf("[INFO] Criado novo processo \"%s\" de PID %d.\tPID local: %lu\n", proc->name, proc->pid, proc->local_pid);
-#endif
-
-	return 0;
+	return proc;
 
 erro1:
 	*(unsigned char *)shm_message_ptr = 0;
 	sem_post(sem_message);
 	free(proc->name);
 	free(proc);
-	return -1;
+	return NULL;
 }
 
-float timevaldiff(struct timeval start, struct timeval end)
+static float timevaldiff(struct timeval start, struct timeval end)
 {
 	return (end.tv_sec - start.tv_sec) * 1000.0f + (end.tv_usec - start.tv_usec) / 1000.0f;
 }
 
-void print_ready_queue(Process *curr_proc, Queue *queue)
+static void print_ready_queue(Process *curr_proc, Queue *queue)
 {
 	Node *node = queue->start;
 
 	if (curr_proc)
-		printf("%lu\t[ ", curr_proc->local_pid);
+		printf("curr_proc: %lu\tready_queue: [ ", curr_proc->local_pid);
 	else
-		printf("-1\t[ ");
+		printf("curr_proc: -1\tready_queue: [ ");
 	while(node) {
-		printf("%lu\t", ((Process *)node->ptr)->local_pid);
+		printf("%lu ", ((Process *)node->ptr)->local_pid);
 		node = node->next;
 	}
-	printf("]\n");
+	printf("]\t\t");
 }
 
-int slist_ioproc_ordering(void *proc1, void *proc2)
+static int slist_ioproc_ordering(void *proc1, void *proc2)
 {
 	unsigned long int local_pid1 = ((IOProcess *)proc1)->proc->local_pid;
 	unsigned long int local_pid2 = ((IOProcess *)proc2)->proc->local_pid;
@@ -309,7 +305,7 @@ int slist_ioproc_ordering(void *proc1, void *proc2)
 		return 0;
 }
 
-void sig_handler (int sig)
+static void sig_handler (int sig)
 {
 	is_running = 0;
 }
