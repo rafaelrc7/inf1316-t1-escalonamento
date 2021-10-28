@@ -1,4 +1,4 @@
-# inf1316-t1-escalonamento
+# INF1316-T1-Escalonamento
 
 ## Alunos
 > Rafael Ribeiro de Carvalho (2011104)
@@ -420,83 +420,86 @@ Como os interpretadores enviam os novos processos a cada 1s, os processos foram 
 O *quantum* é de 1s e o I/O dura 3s. Os estados da fila de prontos do programa foram:
 
 ```
-curr_proc: -1	ready_queue: [ 0 ]		Processo 0 criado e adicionado ao fim da fila.
-curr_proc: 0	ready_queue: [ ]		Processo 0 entra em execução.
-curr_proc: 0	ready_queue: [ 1 ]		Processo 1 criado e adicionado ao fim da fila.
-curr_proc: -1	ready_queue: [ 1 0 ]		Processo 0 sofre preempção e vai para o fim da fila.
-curr_proc: 1	ready_queue: [ 0 ]		Processo 1 entra em execução.
-curr_proc: 1	ready_queue: [ 0 2 ]		Processo 2 criado e adicionado ao fim da fila.
-curr_proc: -1	ready_queue: [ 0 2 1 ]		Processo 1 sofre preempção e vai para o fim da fila.
-curr_proc: 0	ready_queue: [ 2 1 ]		Processo 0 entra em execução.
-curr_proc: 0	ready_queue: [ 2 1 3 ]		Processo 3 criado e adicionado ao fim da fila.
-curr_proc: -1	ready_queue: [ 2 1 3 0 ]		Processo 0 sofre preempção e vai para o fim da fila.
-curr_proc: 2	ready_queue: [ 1 3 0 ]		Processo 2 entra em execução.
-curr_proc: 2	ready_queue: [ 1 3 0 4 ]		Processo 4 criado e adicionado ao fim da fila.
-curr_proc: -1	ready_queue: [ 1 3 0 4 2 ]		Processo 2 sofre preempção e vai para o fim da fila.
-curr_proc: 1	ready_queue: [ 3 0 4 2 ]		Processo 1 entra em execução.
-curr_proc: -1	ready_queue: [ 3 0 4 2 1 ]		Processo 1 sofre preempção e vai para o fim da fila.
-curr_proc: 3	ready_queue: [ 0 4 2 1 ]		Processo 3 entra em execução.
-curr_proc: 3	ready_queue: [ 0 4 2 1 ]		Processo 3 é interrompido por I/O e é bloqueado.
-curr_proc: 0	ready_queue: [ 4 2 1 ]		Processo 0 entra em execução.
-curr_proc: -1	ready_queue: [ 4 2 1 0 ]		Processo 0 sofre preempção e vai para o fim da fila.
-curr_proc: 4	ready_queue: [ 2 1 0 ]		Processo 4 entra em execução.
-curr_proc: -1	ready_queue: [ 2 1 0 4 ]		Processo 4 sofre preempção e vai para o fim da fila.
-curr_proc: 2	ready_queue: [ 1 0 4 ]		Processo 2 entra em execução.
-curr_proc: 2	ready_queue: [ 1 0 4 3 ]		Processo 3 finaliza I/O, é desbloqueado e vai para o fim da fila.
-curr_proc: -1	ready_queue: [ 1 0 4 3 2 ]		Processo 2 sofre preempção e vai para o fim da fila.
-curr_proc: 1	ready_queue: [ 0 4 3 2 ]		Processo 1 entra em execução.
-curr_proc: -1	ready_queue: [ 0 4 3 2 1 ]		Processo 1 sofre preempção e vai para o fim da fila.
-curr_proc: 0	ready_queue: [ 4 3 2 1 ]		Processo 0 entra em execução.
-curr_proc: -1	ready_queue: [ 4 3 2 1 0 ]		Processo 0 sofre preempção e vai para o fim da fila.
-curr_proc: 4	ready_queue: [ 3 2 1 0 ]		Processo 4 entra em execução.
-curr_proc: -1	ready_queue: [ 3 2 1 0 4 ]		Processo 4 sofre preempção e vai para o fim da fila.
-curr_proc: 3	ready_queue: [ 2 1 0 4 ]		Processo 3 entra em execução.
-curr_proc: 3	ready_queue: [ 2 1 0 4 ]		Processo 3 é interrompido por I/O e é bloqueado.
-curr_proc: 2	ready_queue: [ 1 0 4 ]		Processo 2 entra em execução.
-curr_proc: -1	ready_queue: [ 1 0 4 2 ]		Processo 2 sofre preempção e vai para o fim da fila.
-curr_proc: 1	ready_queue: [ 0 4 2 ]		Processo 1 entra em execução.
-curr_proc: -1	ready_queue: [ 0 4 2 1 ]		Processo 1 sofre preempção e vai para o fim da fila.
-curr_proc: 0	ready_queue: [ 4 2 1 ]		Processo 0 entra em execução.
-curr_proc: 0	ready_queue: [ 4 2 1 3 ]		Processo 3 finaliza I/O, é desbloqueado e vai para o fim da fila.
-curr_proc: -1	ready_queue: [ 4 2 1 3 0 ]		Processo 0 sofre preempção e vai para o fim da fila.
-curr_proc: 4	ready_queue: [ 2 1 3 0 ]		Processo 4 entra em execução.
-curr_proc: -1	ready_queue: [ 2 1 3 0 4 ]		Processo 4 sofre preempção e vai para o fim da fila.
-curr_proc: 2	ready_queue: [ 1 3 0 4 ]		Processo 2 entra em execução.
-curr_proc: -1	ready_queue: [ 1 3 0 4 2 ]		Processo 2 sofre preempção e vai para o fim da fila.
-curr_proc: 1	ready_queue: [ 3 0 4 2 ]		Processo 1 entra em execução.
-curr_proc: -1	ready_queue: [ 3 0 4 2 1 ]		Processo 1 sofre preempção e vai para o fim da fila.
-curr_proc: 3	ready_queue: [ 0 4 2 1 ]		Processo 3 entra em execução.
-curr_proc: 3	ready_queue: [ 0 4 2 1 ]		Processo 3 é interrompido por I/O e é bloqueado.
-curr_proc: 0	ready_queue: [ 4 2 1 ]		Processo 0 entra em execução.
-curr_proc: -1	ready_queue: [ 4 2 1 0 ]		Processo 0 sofre preempção e vai para o fim da fila.
-curr_proc: 4	ready_queue: [ 2 1 0 ]		Processo 4 entra em execução.
-curr_proc: -1	ready_queue: [ 2 1 0 4 ]		Processo 4 sofre preempção e vai para o fim da fila.
-curr_proc: 2	ready_queue: [ 1 0 4 ]		Processo 2 entra em execução.
-curr_proc: 2	ready_queue: [ 1 0 4 3 ]		Processo 3 finaliza I/O, é desbloqueado e vai para o fim da fila.
-curr_proc: -1	ready_queue: [ 1 0 4 3 2 ]		Processo 2 sofre preempção e vai para o fim da fila.
-curr_proc: 1	ready_queue: [ 0 4 3 2 ]		Processo 1 entra em execução.
-curr_proc: -1	ready_queue: [ 0 4 3 2 1 ]		Processo 1 sofre preempção e vai para o fim da fila.
-curr_proc: 0	ready_queue: [ 4 3 2 1 ]		Processo 0 entra em execução.
-curr_proc: -1	ready_queue: [ 4 3 2 1 0 ]		Processo 0 sofre preempção e vai para o fim da fila.
-curr_proc: 4	ready_queue: [ 3 2 1 0 ]		Processo 4 entra em execução.
-curr_proc: -1	ready_queue: [ 3 2 1 0 4 ]		Processo 4 sofre preempção e vai para o fim da fila.
-curr_proc: 3	ready_queue: [ 2 1 0 4 ]		Processo 3 entra em execução.
-curr_proc: -1	ready_queue: [ 2 1 0 4 ]		*Processo 3 finalizou.
-curr_proc: 2	ready_queue: [ 1 0 4 ]		Processo 2 entra em execução.
-curr_proc: -1	ready_queue: [ 1 0 4 2 ]		Processo 2 sofre preempção e vai para o fim da fila.
-curr_proc: 1	ready_queue: [ 0 4 2 ]		Processo 1 entra em execução.
-curr_proc: -1	ready_queue: [ 0 4 2 1 ]		Processo 1 sofre preempção e vai para o fim da fila.
-curr_proc: 0	ready_queue: [ 4 2 1 ]		Processo 0 entra em execução.
-curr_proc: -1	ready_queue: [ 4 2 1 ]		*Processo 0 finalizou.
-curr_proc: 4	ready_queue: [ 2 1 ]		Processo 4 entra em execução.
-curr_proc: -1	ready_queue: [ 2 1 4 ]		Processo 4 sofre preempção e vai para o fim da fila.
-curr_proc: 2	ready_queue: [ 1 4 ]		Processo 2 entra em execução.
-curr_proc: -1	ready_queue: [ 1 4 ]		*Processo 2 finalizou.
-curr_proc: 1	ready_queue: [ 4 ]		Processo 1 entra em execução.
-curr_proc: -1	ready_queue: [ 4 ]		*Processo 1 finalizou.
-curr_proc: 4	ready_queue: [ ]		Processo 4 entra em execução.
-curr_proc: -1	ready_queue: [ 4 ]		Processo 4 sofre preempção e vai para o fim da fila.
-curr_proc: 4	ready_queue: [ ]		Processo 4 entra em execução.
-curr_proc: -1	ready_queue: [ ]		*Processo 4 finalizou.
+curr_proc: -1	ready_queue: [ 0 ]	Processo 0 criado e adicionado ao fim da fila.
+curr_proc: 0	ready_queue: [ ]	Processo 0 entra em execução.
+curr_proc: 0	ready_queue: [ 1 ]	Processo 1 criado e adicionado ao fim da fila.
+curr_proc: -1	ready_queue: [ 1 0 ]	Processo 0 sofre preempção e vai para o fim da fila.
+curr_proc: 1	ready_queue: [ 0 ]	Processo 1 entra em execução.
+curr_proc: 1	ready_queue: [ 0 2 ]	Processo 2 criado e adicionado ao fim da fila.
+curr_proc: -1	ready_queue: [ 0 2 1 ]	Processo 1 sofre preempção e vai para o fim da fila.
+curr_proc: 0	ready_queue: [ 2 1 ]	Processo 0 entra em execução.
+curr_proc: 0	ready_queue: [ 2 1 3 ]	Processo 3 criado e adicionado ao fim da fila.
+curr_proc: -1	ready_queue: [ 2 1 3 0 ]	Processo 0 sofre preempção e vai para o fim da fila.
+curr_proc: 2	ready_queue: [ 1 3 0 ]	Processo 2 entra em execução.
+curr_proc: 2	ready_queue: [ 1 3 0 4 ]	Processo 4 criado e adicionado ao fim da fila.
+curr_proc: -1	ready_queue: [ 1 3 0 4 2 ]	Processo 2 sofre preempção e vai para o fim da fila.
+curr_proc: 1	ready_queue: [ 3 0 4 2 ]	Processo 1 entra em execução.
+curr_proc: -1	ready_queue: [ 3 0 4 2 1 ]	Processo 1 sofre preempção e vai para o fim da fila.
+curr_proc: 3	ready_queue: [ 0 4 2 1 ]	Processo 3 entra em execução.
+curr_proc: 3	ready_queue: [ 0 4 2 1 ]	Processo 3 é interrompido por I/O e é bloqueado.
+curr_proc: 0	ready_queue: [ 4 2 1 ]	Processo 0 entra em execução.
+curr_proc: -1	ready_queue: [ 4 2 1 0 ]	Processo 0 sofre preempção e vai para o fim da fila.
+curr_proc: 4	ready_queue: [ 2 1 0 ]	Processo 4 entra em execução.
+curr_proc: -1	ready_queue: [ 2 1 0 4 ]	Processo 4 sofre preempção e vai para o fim da fila.
+curr_proc: 2	ready_queue: [ 1 0 4 ]	Processo 2 entra em execução.
+curr_proc: 2	ready_queue: [ 1 0 4 3 ]	Processo 3 finaliza I/O, é desbloqueado e vai para o fim
+da fila.
+curr_proc: -1	ready_queue: [ 1 0 4 3 2 ]	Processo 2 sofre preempção e vai para o fim da fila.
+curr_proc: 1	ready_queue: [ 0 4 3 2 ]	Processo 1 entra em execução.
+curr_proc: -1	ready_queue: [ 0 4 3 2 1 ]	Processo 1 sofre preempção e vai para o fim da fila.
+curr_proc: 0	ready_queue: [ 4 3 2 1 ]	Processo 0 entra em execução.
+curr_proc: -1	ready_queue: [ 4 3 2 1 0 ]	Processo 0 sofre preempção e vai para o fim da fila.
+curr_proc: 4	ready_queue: [ 3 2 1 0 ]	Processo 4 entra em execução.
+curr_proc: -1	ready_queue: [ 3 2 1 0 4 ]	Processo 4 sofre preempção e vai para o fim da fila.
+curr_proc: 3	ready_queue: [ 2 1 0 4 ]	Processo 3 entra em execução.
+curr_proc: 3	ready_queue: [ 2 1 0 4 ]	Processo 3 é interrompido por I/O e é bloqueado.
+curr_proc: 2	ready_queue: [ 1 0 4 ]	Processo 2 entra em execução.
+curr_proc: -1	ready_queue: [ 1 0 4 2 ]	Processo 2 sofre preempção e vai para o fim da fila.
+curr_proc: 1	ready_queue: [ 0 4 2 ]	Processo 1 entra em execução.
+curr_proc: -1	ready_queue: [ 0 4 2 1 ]	Processo 1 sofre preempção e vai para o fim da fila.
+curr_proc: 0	ready_queue: [ 4 2 1 ]	Processo 0 entra em execução.
+curr_proc: 0	ready_queue: [ 4 2 1 3 ]	Processo 3 finaliza I/O, é desbloqueado e vai para o fim
+da fila.
+curr_proc: -1	ready_queue: [ 4 2 1 3 0 ]	Processo 0 sofre preempção e vai para o fim da fila.
+curr_proc: 4	ready_queue: [ 2 1 3 0 ]	Processo 4 entra em execução.
+curr_proc: -1	ready_queue: [ 2 1 3 0 4 ]	Processo 4 sofre preempção e vai para o fim da fila.
+curr_proc: 2	ready_queue: [ 1 3 0 4 ]	Processo 2 entra em execução.
+curr_proc: -1	ready_queue: [ 1 3 0 4 2 ]	Processo 2 sofre preempção e vai para o fim da fila.
+curr_proc: 1	ready_queue: [ 3 0 4 2 ]	Processo 1 entra em execução.
+curr_proc: -1	ready_queue: [ 3 0 4 2 1 ]	Processo 1 sofre preempção e vai para o fim da fila.
+curr_proc: 3	ready_queue: [ 0 4 2 1 ]	Processo 3 entra em execução.
+curr_proc: 3	ready_queue: [ 0 4 2 1 ]	Processo 3 é interrompido por I/O e é bloqueado.
+curr_proc: 0	ready_queue: [ 4 2 1 ]	Processo 0 entra em execução.
+curr_proc: -1	ready_queue: [ 4 2 1 0 ]	Processo 0 sofre preempção e vai para o fim da fila.
+curr_proc: 4	ready_queue: [ 2 1 0 ]	Processo 4 entra em execução.
+curr_proc: -1	ready_queue: [ 2 1 0 4 ]	Processo 4 sofre preempção e vai para o fim da fila.
+curr_proc: 2	ready_queue: [ 1 0 4 ]	Processo 2 entra em execução.
+curr_proc: 2	ready_queue: [ 1 0 4 3 ]	Processo 3 finaliza I/O, é desbloqueado e vai para o fim
+da fila.
+curr_proc: -1	ready_queue: [ 1 0 4 3 2 ]	Processo 2 sofre preempção e vai para o fim da fila.
+curr_proc: 1	ready_queue: [ 0 4 3 2 ]	Processo 1 entra em execução.
+curr_proc: -1	ready_queue: [ 0 4 3 2 1 ]	Processo 1 sofre preempção e vai para o fim da fila.
+curr_proc: 0	ready_queue: [ 4 3 2 1 ]	Processo 0 entra em execução.
+curr_proc: -1	ready_queue: [ 4 3 2 1 0 ]	Processo 0 sofre preempção e vai para o fim da fila.
+curr_proc: 4	ready_queue: [ 3 2 1 0 ]	Processo 4 entra em execução.
+curr_proc: -1	ready_queue: [ 3 2 1 0 4 ]	Processo 4 sofre preempção e vai para o fim da fila.
+curr_proc: 3	ready_queue: [ 2 1 0 4 ]	Processo 3 entra em execução.
+curr_proc: -1	ready_queue: [ 2 1 0 4 ]	*Processo 3 finalizou.
+curr_proc: 2	ready_queue: [ 1 0 4 ]	Processo 2 entra em execução.
+curr_proc: -1	ready_queue: [ 1 0 4 2 ]	Processo 2 sofre preempção e vai para o fim da fila.
+curr_proc: 1	ready_queue: [ 0 4 2 ]	Processo 1 entra em execução.
+curr_proc: -1	ready_queue: [ 0 4 2 1 ]	Processo 1 sofre preempção e vai para o fim da fila.
+curr_proc: 0	ready_queue: [ 4 2 1 ]	Processo 0 entra em execução.
+curr_proc: -1	ready_queue: [ 4 2 1 ]	*Processo 0 finalizou.
+curr_proc: 4	ready_queue: [ 2 1 ]	Processo 4 entra em execução.
+curr_proc: -1	ready_queue: [ 2 1 4 ]	Processo 4 sofre preempção e vai para o fim da fila.
+curr_proc: 2	ready_queue: [ 1 4 ]	Processo 2 entra em execução.
+curr_proc: -1	ready_queue: [ 1 4 ]	*Processo 2 finalizou.
+curr_proc: 1	ready_queue: [ 4 ]	Processo 1 entra em execução.
+curr_proc: -1	ready_queue: [ 4 ]	*Processo 1 finalizou.
+curr_proc: 4	ready_queue: [ ]	Processo 4 entra em execução.
+curr_proc: -1	ready_queue: [ 4 ]	Processo 4 sofre preempção e vai para o fim da fila.
+curr_proc: 4	ready_queue: [ ]	Processo 4 entra em execução.
+curr_proc: -1	ready_queue: [ ]	*Processo 4 finalizou.
 ```
 
