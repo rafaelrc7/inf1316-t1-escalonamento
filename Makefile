@@ -1,7 +1,7 @@
 ##########TEMPLATE##########
 
 TARGET=interpretador_rr escalonador_rr interpretador_rt escalonador_rt prog_cpu prog_io P1 P2 P3 P4 P5 P6
-DOCS=Relatorio.pdf
+DOCS=Relatorio.pdf Relatorio-LAB.pdf
 
 BINDIR=bin
 SRCDIR=src
@@ -35,6 +35,9 @@ all: $(BIN)
 docs: $(DOCS)
 
 Relatorio.pdf: README.md
+	pandoc -V geometry:margin=1in $^ -o $@
+
+Relatorio-LAB.pdf: LAB.md
 	pandoc -V geometry:margin=1in $^ -o $@
 
 $(BINDIR)/escalonador_rr: $(OBJDIR)/escalonador_rr.o $(OBJDIR)/queue.o $(OBJDIR)/slist.o

@@ -3,7 +3,7 @@
 int main(void)
 {
 	unsigned long int i, j, max, ios;
-	max = 100000000;
+	max = 1000000000;
 	ios = 3;
 
 	for (j = 0; j < ios; ++j) {
