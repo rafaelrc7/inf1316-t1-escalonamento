@@ -160,3 +160,45 @@ Remove o item atualmente apontado pelo iterador da lista e o retorna.
 ## Tratamento de erros
 Não existe classificação de tipos de erro no código em si. Porém os programas tratam erros de duas maneiras, erros "fatais" e não fatais. Falhas em funções do sistema como `malloc()` e `calloc()`, dentre outras, são tratados como erro fatal e o programa é encerrado. Porém alguns erros, que são esperados e trataveis, como, por exemplo, tentar executar um programa que não existe (não encontrado pela `exec()`) apenas gerará uma mensagem de erro e o processo será ignorado.
 
+## Execução do Real Time
+
+O programa executado foi o `exec.txt` abaixo
+`Run ./prog_cpu I=0 D=10
+Run ./prog_cpu I=10 D=5
+Run ./prog_cpu I=30 D=5
+Run ./prog_io I=15 D=2
+Run ./prog_cpu I=./prog_io D=5`
+
+Como explicado acima, em *Escalonador* I = inicio da execução e D = duração. 
+A ordem de execução foi o primeiro programa criado em 0s, que executado até 10. Em 10s cria-se o segundo programa, que é executado até 15s.Em 15s cria-se o quarto programa, que é executado até 17s. Da mesma maneira, o quinto programa é criado quando o quarto acaba(17s), sendo executado de 17s a 22s.De 22s a 30s a CPU fica ociosa, e em 30s o terceiro programa é gerado, sendo executado até 35s. CPU fica ociosa de 35s a 59s.
+A ordem de término foi: P1, P2, P4, P5, P3, pois cada execução de P3 envolvia 3s de IO, e depois era executado na próxima vez, demorando mais que os outros sem IO, mesmo com o mesmo tempo de duração. Então, em algumas execuções o D = 2 do P3 ficava em espera de IO, e no próximo executava.
+
+## Execução do Round Robin
+
+
+O programa executado foi o `exec.txt` abaixo
+`Run ./prog_cpu
+Run ./prog_cpu
+Run ./prog_cpu
+Run ./prog_io
+Run ./prog_cpu`
+
+No caso do Round Robin, a criação seguiu a ordem P1, P2, P3, P4 , P5. E sua execução foi assim:
+
+Cria 1
+Exec 1
+Cria 2
+Exec 1
+Exec 2
+Cria 3
+Exec 1
+Cria 4
+Exec 3
+Cria 5
+Exec 1
+Exec 4 (entra em IO)
+Exec 5, 3, 2, 1, , 4(IO), 5, 3, 2, 1, 5, 4(IO)
+
+
+5, 3, 2, 1, 5, 4(IO) -> E ele segue assim até o final. 
+
