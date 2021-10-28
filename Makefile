@@ -11,7 +11,7 @@ DEPDIR=$(OBJDIR)/dep
 CC=gcc
 EXT=.c
 
-CCFLAGS=-O0 -g -Wall -Wextra -pedantic -DDEBUG
+CCFLAGS=-O0 -g -Wall -Wextra -pedantic
 LDFLAGS=-lrt -pthread
 
 ##########AUTO##########
